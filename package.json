@@ -1,0 +1,58 @@
+{
+  "name": "rag-chat",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "3.0.74",
+    "@ai-sdk/google": "3.0.67",
+    "@ai-sdk/openai": "3.0.58",
+    "@ai-sdk/react": "3.0.176",
+    "@anthropic-ai/sdk": "0.92.0",
+    "@google/generative-ai": "0.24.1",
+    "@langchain/community": "1.1.27",
+    "@langchain/core": "1.1.44",
+    "@langchain/google-genai": "2.1.30",
+    "@langchain/ollama": "1.2.7",
+    "@langchain/openai": "1.4.5",
+    "@langchain/textsplitters": "1.0.1",
+    "@upstash/redis": "1.38.0",
+    "ai": "6.0.174",
+    "chromadb": "3.4.3",
+    "clsx": "2.1.1",
+    "ioredis": "5.10.1",
+    "lucide-react": "1.14.0",
+    "mammoth": "1.12.0",
+    "next": "15.5.18",
+    "openai": "6.35.0",
+    "pdf-parse": "1.1.1",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "tailwind-merge": "3.5.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.2.4",
+    "@tailwindcss/typography": "0.5.19",
+    "@types/node": "25.6.0",
+    "@types/pdf-parse": "1.1.5",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "4.2.4",
+    "typescript": "6.0.3"
+  },
+  "overrides": {
+    "uuid": ">=10.0.0",
+    "langsmith": ">=0.6.0",
+    "postcss": "^8.5.10"
+  }
+}

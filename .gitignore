@@ -1,0 +1,45 @@
+# dependencies
+/node_modules
+/.pnpm-store
+/.next
+/out
+/build
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# local databases
+/chroma_data
+*.sqlite3
+
+# system files
+.DS_Store
+Thumbs.db
+
+# project specific        
+/dist
+/tmp
+.codegraph/
+docs/maestro/
+
+# documentation privacy
+/*.md
+!/README.md
