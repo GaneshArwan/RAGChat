@@ -28,7 +28,7 @@
     "ioredis": "5.10.1",
     "lucide-react": "1.14.0",
     "mammoth": "1.12.0",
-    "next": "15.5.18",
+    "next": "15.5.28",
     "openai": "6.35.0",
     "pdf-parse": "1.1.1",
     "react": "19.2.5",
@@ -46,13 +46,13 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.2.4",
+    "eslint-config-next": "15.5.28",
     "tailwindcss": "4.2.4",
     "typescript": "6.0.3"
   },
   "overrides": {
     "uuid": ">=10.0.0",
     "langsmith": ">=0.6.0",
-    "postcss": "^8.5.10"
+    "postcss": "^8.5.31"
   }
 }
