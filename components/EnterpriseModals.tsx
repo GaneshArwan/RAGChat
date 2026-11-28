@@ -185,7 +185,7 @@ export function ConnectorsHubModal({
             <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-emerald-50">Universal Data &amp; DB Hub ({catalog.length || 36})</h3>
             <p className="text-[11px] font-semibold text-slate-600 dark:text-emerald-300/75">SQL, NoSQL, Warehouses, APIs &amp; SaaS • Delta Sync • Tenant &amp; RBAC</p>
           </div>
-          <button type="button" aria-label="Close connectors modal" onClick={onClose} className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-700 hover:bg-slate-100 dark:hover:bg-emerald-500/10">
+          <button type="button" aria-label="Close connectors modal" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-700 hover:bg-slate-100 dark:hover:bg-emerald-500/10">
             <X size={18} aria-hidden="true" />
           </button>
         </div>
@@ -239,7 +239,7 @@ export function ConnectorsHubModal({
                     <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">.ENV</span>
                   )}
                 </div>
-                <p className="text-[9px] text-slate-400 mt-1 line-clamp-2">{item.description}</p>
+                <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{item.description}</p>
               </button>
             ))}
           </div>
@@ -716,10 +716,10 @@ export function AuditApiModal({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" aria-label="Refresh audit and job logs" onClick={loadData} className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-700 hover:bg-slate-100 dark:hover:bg-emerald-500/10" title="Refresh">
+            <button type="button" aria-label="Refresh audit and job logs" onClick={loadData} className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-700 hover:bg-slate-100 dark:hover:bg-emerald-500/10" title="Refresh">
               <RefreshCw size={16} aria-hidden="true" className={loading ? "animate-spin" : ""} />
             </button>
-            <button type="button" aria-label="Close enterprise operations modal" onClick={onClose} className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-700 hover:bg-slate-100 dark:hover:bg-emerald-500/10">
+            <button type="button" aria-label="Close enterprise operations modal" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-700 hover:bg-slate-100 dark:hover:bg-emerald-500/10">
               <X size={18} aria-hidden="true" />
             </button>
           </div>
@@ -750,9 +750,9 @@ export function AuditApiModal({
           {tab === "audit" && (
             <>
               <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Async Ingestion Jobs ({jobs.length})</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Async Ingestion Jobs ({jobs.length})</span>
                 {jobs.length === 0 ? (
-                  <p className="text-xs font-bold text-slate-400 py-4 text-center border border-dashed border-slate-200 dark:border-emerald-500/20 rounded-2xl">
+                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 py-4 text-center border border-dashed border-slate-300 dark:border-emerald-500/25 rounded-2xl">
                     No async jobs queued yet (`POST /api/jobs`).
                   </p>
                 ) : (
@@ -760,11 +760,11 @@ export function AuditApiModal({
                     {jobs.map(job => (
                       <div key={job.id} className="p-3 rounded-xl border border-slate-200 dark:border-emerald-500/15 bg-slate-50/70 dark:bg-emerald-950/30 flex items-center justify-between text-[11px]">
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-black uppercase text-[9px]">{job.status}</span>
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-bold uppercase text-[9px]">{job.status}</span>
                           <span className="font-bold">{job.source}</span>
-                          <span className="text-slate-400 text-[10px]">{job.chunkCount} chunks • {job.indexedFiles?.length || 0} files</span>
+                          <span className="text-slate-600 dark:text-slate-400 text-[10px]">{job.chunkCount} chunks • {job.indexedFiles?.length || 0} files</span>
                         </div>
-                        <span className="font-mono text-[10px] text-slate-400">{job.id.slice(0, 8)}</span>
+                        <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400">{job.id.slice(0, 8)}</span>
                       </div>
                     ))}
                   </div>
@@ -772,9 +772,9 @@ export function AuditApiModal({
               </div>
 
               <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-emerald-400/60">Recent Tenant Audit Events ({events.length})</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-emerald-300/80">Recent Tenant Audit Events ({events.length})</span>
                 {events.length === 0 ? (
-                  <p className="text-xs font-bold text-slate-400 py-6 text-center border border-dashed border-slate-200 dark:border-emerald-500/20 rounded-2xl">
+                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 py-6 text-center border border-dashed border-slate-300 dark:border-emerald-500/25 rounded-2xl">
                     No audit events recorded yet for tenant &ldquo;{config.tenantId || "default"}&rdquo;.
                   </p>
                 ) : (
@@ -782,11 +782,11 @@ export function AuditApiModal({
                     {events.map((ev) => (
                       <div key={ev.id} className="p-3 rounded-xl border border-slate-200 dark:border-emerald-500/15 bg-slate-50/70 dark:bg-emerald-950/30 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-black uppercase text-[9px]">{ev.action}</span>
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-bold uppercase text-[9px]">{ev.action}</span>
                           <span className="font-bold text-slate-700 dark:text-emerald-100">{ev.vectorStore || ev.provider || "system"}</span>
-                          <span className="text-slate-400 font-mono text-[10px]">{JSON.stringify(ev.details)}</span>
+                          <span className="text-slate-600 dark:text-slate-400 font-mono text-[10px]">{JSON.stringify(ev.details)}</span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-400">{new Date(ev.timestamp).toLocaleTimeString()}</span>
+                        <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">{new Date(ev.timestamp).toLocaleTimeString()}</span>
                       </div>
                     ))}
                   </div>
@@ -798,12 +798,12 @@ export function AuditApiModal({
           {tab === "eval" && (
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                <label className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
                   Golden Test Cases (1 per line: `question | kw1, kw2 | optional_filename`)
                 </label>
                 <textarea
                   rows={4}
-                  className="w-full bg-slate-50 dark:bg-emerald-900/40 border border-slate-200 dark:border-emerald-500/20 rounded-2xl p-3 text-xs font-mono outline-none"
+                  className="w-full bg-slate-50 dark:bg-emerald-900/40 border border-slate-300 dark:border-emerald-500/25 rounded-2xl p-3 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                   value={evalText}
                   onChange={e => setEvalText(e.target.value)}
                 />
@@ -812,9 +812,9 @@ export function AuditApiModal({
                 type="button"
                 onClick={runEval}
                 disabled={evalRunning}
-                className="glossy-emerald text-white px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
+                className="glossy-emerald text-white px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wide flex items-center gap-2 disabled:opacity-50"
               >
-                <Play size={14} /> {evalRunning ? "Evaluating..." : "Run Golden Benchmark"}
+                <Play size={14} aria-hidden="true" /> {evalRunning ? "Evaluating..." : "Run Golden Benchmark"}
               </button>
 
               {evalError && (

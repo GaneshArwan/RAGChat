@@ -97,6 +97,7 @@ export default function RAGChatPage() {
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [indexedDocuments, setIndexedDocuments] = useState<{name: string, active: boolean}[]>([]);
   const [localInput, setLocalInput] = useState("");
+  const [openSourceKey, setOpenSourceKey] = useState<string | null>(null);
   
   const isConfigComplete = !!(
     // 1. Core Inference
@@ -399,7 +400,7 @@ export default function RAGChatPage() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-emerald-50/90 overflow-hidden font-sans selection:bg-emerald-200 dark:selection:bg-emerald-500/30">
+    <div className="flex h-dvh bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-emerald-50/90 overflow-hidden font-sans selection:bg-emerald-200 dark:selection:bg-emerald-500/30">
       
       {/* Notification Toast */}
       {notification && (
@@ -435,7 +436,7 @@ export default function RAGChatPage() {
           <div className="flex flex-col -space-y-1">
             <h1 className="font-bold text-xl tracking-tight text-slate-900 dark:text-emerald-300">RAGChat</h1>
           </div>
-          <button type="button" aria-label="Close sidebar" onClick={() => setIsSidebarOpen(false)} className="text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-emerald-500/10">
+          <button type="button" aria-label="Close sidebar" onClick={() => setIsSidebarOpen(false)} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-emerald-500/10">
             <PanelLeftClose size={20} aria-hidden="true" />
           </button>
         </div>
@@ -510,53 +511,53 @@ export default function RAGChatPage() {
              </form>
           </section>
 
-          {/* MODULE 2: ACTIVE LIBRARY */}
+          {/* Active library */}
           {indexedDocuments.length > 0 && (
             <section className="space-y-4">
               <div className="flex items-center justify-between px-1">
                  <div className="flex items-center gap-2">
-                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-emerald-400/50">Active Library</h3>
+                   <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-emerald-300/80">Active Library</h3>
                  </div>
-                 <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full text-[9px] font-black">{indexedDocuments.length} {indexedDocuments.length === 1 ? "DOCUMENT" : "DOCUMENTS"}</span>
+                 <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold">{indexedDocuments.length} {indexedDocuments.length === 1 ? "DOCUMENT" : "DOCUMENTS"}</span>
               </div>
               <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar pr-1">
                 {indexedDocuments.map((doc) => (
-                  <div key={doc.name} className={cn("group flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300", doc.active ? "bg-white dark:bg-emerald-400/5 border-slate-200 dark:border-emerald-500/10 shadow-sm" : "bg-slate-100/40 dark:bg-black/20 border-transparent grayscale opacity-40")}>
-                    <button type="button" onClick={() => toggleDoc(doc.name)} className={cn("shrink-0 transition-all transform active:scale-90", doc.active ? "text-emerald-500" : "text-slate-400")}>
-                      {doc.active ? <CheckSquare size={18} fill="currentColor" className="fill-emerald-500/10" /> : <Square size={18} />}
+                  <div key={doc.name} className={cn("group flex items-center gap-3 p-3 rounded-xl border transition-colors", doc.active ? "bg-white dark:bg-emerald-400/5 border-slate-200 dark:border-emerald-500/15" : "bg-slate-100/60 dark:bg-black/20 border-transparent opacity-60")}>
+                    <button type="button" aria-label={doc.active ? `Exclude ${doc.name}` : `Include ${doc.name}`} onClick={() => toggleDoc(doc.name)} className={cn("shrink-0 p-1 rounded transition-colors", doc.active ? "text-emerald-700 dark:text-emerald-400" : "text-slate-600 dark:text-slate-400")}>
+                      {doc.active ? <CheckSquare size={18} aria-hidden="true" fill="currentColor" className="fill-emerald-500/10" /> : <Square size={18} aria-hidden="true" />}
                     </button>
-                    <div className="flex-1 min-w-0"><p className="text-xs font-bold truncate text-slate-700 dark:text-emerald-50/90">{doc.name}</p></div>
-                    <button type="button" onClick={() => removeDoc(doc.name)} className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all text-slate-300"><Trash2 size={14} /></button>
+                    <div className="flex-1 min-w-0"><p className="text-xs font-semibold truncate text-slate-800 dark:text-emerald-50/90">{doc.name}</p></div>
+                    <button type="button" aria-label={`Remove ${doc.name}`} onClick={() => removeDoc(doc.name)} className="opacity-75 hover:opacity-100 focus-visible:opacity-100 p-2 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-600 dark:text-slate-300 hover:text-red-600 rounded-lg transition-colors"><Trash2 size={14} aria-hidden="true" /></button>
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {/* MODULE 3: SYSTEM CONFIGURATION */}
-          <div className="pt-6 border-t border-slate-100 dark:border-emerald-500/10 space-y-6">
+          {/* System configuration */}
+          <div className="pt-6 border-t border-slate-200 dark:border-emerald-500/15 space-y-6">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-emerald-400/50">System Configuration</h3>
+                <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-emerald-300/80">System Configuration</h3>
               </div>
-              <button type="button" onClick={() => setShowSettings(!showSettings)} className="text-emerald-600 dark:text-emerald-400 text-[10px] font-black tracking-tighter hover:bg-emerald-50 dark:hover:bg-emerald-500/5 px-2 py-1 rounded-lg transition-colors">
+              <button type="button" onClick={() => setShowSettings(!showSettings)} className="text-emerald-700 dark:text-emerald-300 text-[10px] font-bold tracking-wide hover:bg-emerald-50 dark:hover:bg-emerald-500/10 px-2.5 py-1 rounded-lg transition-colors">
                 {showSettings ? "HIDE" : "EXPAND"}
               </button>
             </div>
 
             {showSettings && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="space-y-6">
                 
-                {/* 3.1 INFERENCE CONFIG */}
-                <div className="bg-white/40 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/10 rounded-2xl p-5 space-y-5 shadow-sm">
+                {/* Inference config */}
+                <div className="bg-slate-50/70 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/15 rounded-2xl p-5 space-y-5">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600/60">Inference Provider</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Inference Provider</span>
                   </div>
                   
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Provider</label>
-                      <select className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-black outline-none cursor-pointer hover:border-emerald-500/30 transition-colors", fieldErr(!config.provider))} value={config.provider || ""} onChange={(e) => updateProvider(e.target.value as any)}>
+                      <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Provider</label>
+                      <select className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 hover:border-emerald-600/50 transition-colors", fieldErr(!config.provider))} value={config.provider || ""} onChange={(e) => updateProvider(e.target.value as any)}>
                         <option value="" disabled hidden>Please Select Provider</option>
                         <option value="gemini">Google Gemini</option>
                         <option value="openai">OpenAI GPT</option>
@@ -566,24 +567,24 @@ export default function RAGChatPage() {
                     </div>
 
                     {config.provider && (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="space-y-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Model ID</label>
-                          <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(!config.modelId))} placeholder={DEFAULT_CONFIGS[config.provider]?.modelId || ""} value={config.modelId || ""} onChange={(e) => setConfig({...config, modelId: e.target.value})} />
+                          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Model ID</label>
+                          <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(!config.modelId))} placeholder={DEFAULT_CONFIGS[config.provider]?.modelId || ""} value={config.modelId || ""} onChange={(e) => setConfig({...config, modelId: e.target.value})} />
                         </div>
 
                         {config.provider === "custom" && (
-                          <div className="space-y-1.5 animate-in fade-in zoom-in-95 duration-200">
-                            <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Base URL</label>
-                            <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(!config.baseUrl))} placeholder="http://localhost:11434/v1" value={config.baseUrl || ""} onChange={(e) => setConfig({...config, baseUrl: e.target.value})} />
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Base URL</label>
+                            <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(!config.baseUrl))} placeholder="http://localhost:11434/v1" value={config.baseUrl || ""} onChange={(e) => setConfig({...config, baseUrl: e.target.value})} />
                           </div>
                         )}
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">API Key</label>
+                          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">API Key</label>
                           <div className="relative group/key">
-                            <input type="password" placeholder="" className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl pl-10 pr-3 py-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(config.provider !== "custom" && !config.apiKey))} value={config.apiKey || ""} onChange={(e) => setConfig({...config, apiKey: e.target.value})} />
-                            <Key size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500/40 group-focus-within/key:text-emerald-500 transition-colors" />
+                            <input type="password" placeholder="" className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl pl-10 pr-3 py-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(config.provider !== "custom" && !config.apiKey))} value={config.apiKey || ""} onChange={(e) => setConfig({...config, apiKey: e.target.value})} />
+                            <Key size={14} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-emerald-400 group-focus-within/key:text-emerald-600 transition-colors" />
                           </div>
                         </div>
                       </div>
@@ -591,16 +592,16 @@ export default function RAGChatPage() {
                   </div>
                 </div>
 
-                {/* 3.2 VECTOR INFRASTRUCTURE (EMBEDDINGS) */}
-                <div className="bg-white/40 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/10 rounded-2xl p-5 space-y-5 shadow-sm">
+                {/* Vector infrastructure */}
+                <div className="bg-slate-50/70 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/15 rounded-2xl p-5 space-y-5">
                    <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600/60">Vector Infrastructure</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Vector Infrastructure</span>
                   </div>
 
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Vector Store DB</label>
-                      <select className="w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-black outline-none cursor-pointer hover:border-emerald-500/30 transition-colors" value={config.vectorStoreProvider || "chroma"} onChange={(e) => setConfig({ ...config, vectorStoreProvider: e.target.value as any })}>
+                      <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Vector Store DB</label>
+                      <select className="w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 hover:border-emerald-600/50 transition-colors" value={config.vectorStoreProvider || "chroma"} onChange={(e) => setConfig({ ...config, vectorStoreProvider: e.target.value as any })}>
                         <option value="chroma">ChromaDB (Local / Self-Hosted)</option>
                         <option value="qdrant">Qdrant (REST Cloud / Cluster)</option>
                         <option value="pinecone">Pinecone (Serverless Namespaces)</option>
@@ -629,8 +630,8 @@ export default function RAGChatPage() {
                     )}
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Embedding Provider</label>
-                      <select className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-black outline-none cursor-pointer hover:border-emerald-500/30 transition-colors", fieldErr(!config.embeddingProvider))} value={config.embeddingProvider || ""} onChange={(e) => {
+                      <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Embedding Provider</label>
+                      <select className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 hover:border-emerald-600/50 transition-colors", fieldErr(!config.embeddingProvider))} value={config.embeddingProvider || ""} onChange={(e) => {
                         const prov = e.target.value as any;
                         setConfig({...config, embeddingProvider: prov, embeddingModelId: ""});
                       }}>
@@ -642,35 +643,35 @@ export default function RAGChatPage() {
                     </div>
 
                     {config.embeddingProvider && (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="space-y-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Embedding Model ID</label>
-                          <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(!config.embeddingModelId))} placeholder={DEFAULT_CONFIGS[config.embeddingProvider]?.embeddingModelId || ""} value={config.embeddingModelId || ""} onChange={(e) => setConfig({...config, embeddingModelId: e.target.value})} />
+                          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Embedding Model ID</label>
+                          <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(!config.embeddingModelId))} placeholder={DEFAULT_CONFIGS[config.embeddingProvider]?.embeddingModelId || ""} value={config.embeddingModelId || ""} onChange={(e) => setConfig({...config, embeddingModelId: e.target.value})} />
                         </div>
 
                         {config.embeddingProvider === "custom" && (
-                          <div className="space-y-1.5 animate-in fade-in zoom-in-95 duration-200">
-                            <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Embedding Base URL</label>
-                            <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(!config.embeddingBaseUrl))} placeholder="http://localhost:11434" value={config.embeddingBaseUrl || ""} onChange={(e) => setConfig({...config, embeddingBaseUrl: e.target.value})} />
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Embedding Base URL</label>
+                            <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(!config.embeddingBaseUrl))} placeholder="http://localhost:11434" value={config.embeddingBaseUrl || ""} onChange={(e) => setConfig({...config, embeddingBaseUrl: e.target.value})} />
                           </div>
                         )}
 
                         {config.embeddingProvider !== "custom" && (
                           <div className="space-y-3 pt-1">
                              <div className="flex items-center justify-between px-1">
-                                <label className="text-[10px] font-black text-slate-400 dark:text-emerald-500/50 uppercase tracking-widest">Embedding Key</label>
-                                <div className="flex bg-slate-100 dark:bg-emerald-900/40 p-0.5 rounded-lg border border-emerald-500/10 shadow-sm">
+                                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Embedding Key</label>
+                                <div className="flex bg-slate-100 dark:bg-emerald-900/40 p-0.5 rounded-lg border border-slate-200 dark:border-emerald-500/20">
                                   {["main", "custom"].map((s) => (
-                                    <button type="button" key={s} onClick={() => setConfig({...config, embeddingKeySource: s as any})} className={cn("px-2.5 py-1 text-[8px] font-black uppercase rounded-md transition-all", (config.embeddingKeySource || "main") === s ? "bg-emerald-500 text-white shadow-lg" : "text-emerald-500/40 hover:text-emerald-500")}>
+                                    <button type="button" key={s} onClick={() => setConfig({...config, embeddingKeySource: s as any})} className={cn("px-2.5 py-1 text-[9px] font-bold uppercase rounded-md transition-colors", (config.embeddingKeySource || "main") === s ? "bg-emerald-600 text-white" : "text-slate-600 dark:text-emerald-300 hover:text-emerald-700")}>
                                       {s === "main" ? "Use Main" : "Key"}
                                     </button>
                                   ))}
                                 </div>
                              </div>
                              {config.embeddingKeySource === "custom" && (
-                               <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
-                                 <input type="password" placeholder="" className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl pl-10 pr-3 py-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(!config.embeddingApiKey))} value={config.embeddingApiKey || ""} onChange={(e) => setConfig({...config, embeddingApiKey: e.target.value})} />
-                                 <Key size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500/40" />
+                               <div className="relative">
+                                 <input type="password" placeholder="" className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl pl-10 pr-3 py-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(!config.embeddingApiKey))} value={config.embeddingApiKey || ""} onChange={(e) => setConfig({...config, embeddingApiKey: e.target.value})} />
+                                 <Key size={14} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-emerald-400" />
                                </div>
                              )}
                           </div>
@@ -680,29 +681,29 @@ export default function RAGChatPage() {
                   </div>
                 </div>
 
-                {/* 3.3 RETRIEVAL & OPTIMIZATION */}
-                <div className="bg-white/40 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/10 rounded-2xl p-5 space-y-5 shadow-sm">
+                {/* Retrieval optimization */}
+                <div className="bg-slate-50/70 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/15 rounded-2xl p-5 space-y-5">
                    <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600/60">Retrieval Optimization</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Retrieval Optimization</span>
                   </div>
 
                   <div className="space-y-5">
                     <div className="flex items-center justify-between px-1">
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-black text-slate-700 dark:text-emerald-50/90 tracking-tight">Reranking Engine</span>
-                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Improve High Recall</span>
+                        <span className="text-[11px] font-bold text-slate-800 dark:text-emerald-50/90">Reranking Engine</span>
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">Improve High Recall</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={!!config.useReranking} onChange={(e) => setConfig({...config, useReranking: e.target.checked})} />
-                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                        <input type="checkbox" aria-label="Reranking Engine" className="sr-only peer" checked={!!config.useReranking} onChange={(e) => setConfig({...config, useReranking: e.target.checked})} />
+                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                       </label>
                     </div>
 
                     {config.useReranking && (
-                       <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+                       <div className="space-y-4 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/15">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-emerald-600/60 uppercase px-1 tracking-widest">Rerank Provider</label>
-                            <select className={cn("w-full bg-white dark:bg-emerald-900/60 border border-emerald-500/10 rounded-xl p-3 text-xs font-black outline-none cursor-pointer", fieldErr(config.useReranking && !config.rerankProvider))} value={config.rerankProvider || ""} onChange={(e) => {
+                            <label className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase px-1 tracking-wide">Rerank Provider</label>
+                            <select className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600", fieldErr(config.useReranking && !config.rerankProvider))} value={config.rerankProvider || ""} onChange={(e) => {
                               const prov = e.target.value as any;
                               setConfig({...config, rerankProvider: prov, rerankModelId: ""});
                             }}>
@@ -715,34 +716,34 @@ export default function RAGChatPage() {
                           </div>
 
                           {config.rerankProvider && config.rerankProvider !== "default" && (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="space-y-4">
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-emerald-600/60 uppercase px-1 tracking-widest">Model ID</label>
-                                <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(!config.rerankModelId))} placeholder={config.rerankProvider ? (DEFAULT_CONFIGS[config.rerankProvider]?.rerankModelId || "") : ""} value={config.rerankModelId || ""} onChange={(e) => setConfig({...config, rerankModelId: e.target.value})} />
+                                <label className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase px-1 tracking-wide">Model ID</label>
+                                <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(!config.rerankModelId))} placeholder={config.rerankProvider ? (DEFAULT_CONFIGS[config.rerankProvider]?.rerankModelId || "") : ""} value={config.rerankModelId || ""} onChange={(e) => setConfig({...config, rerankModelId: e.target.value})} />
                               </div>
 
                               {config.rerankProvider === "custom" && (
-                                <div className="space-y-1.5 animate-in fade-in zoom-in-95 duration-200">
-                                  <label className="text-[10px] font-bold text-emerald-600/60 uppercase px-1 tracking-widest">Base URL</label>
-                                  <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(!config.rerankBaseUrl))} placeholder="http://localhost:11434/v1/rerank" value={config.rerankBaseUrl || ""} onChange={(e) => setConfig({...config, rerankBaseUrl: e.target.value})} />
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase px-1 tracking-wide">Base URL</label>
+                                  <input className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(!config.rerankBaseUrl))} placeholder="http://localhost:11434/v1/rerank" value={config.rerankBaseUrl || ""} onChange={(e) => setConfig({...config, rerankBaseUrl: e.target.value})} />
                                 </div>
                               )}
 
                               <div className="space-y-3 pt-1">
                                  <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-                                   <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Rerank Key</label>
-                                   <div className="flex bg-white dark:bg-emerald-900/40 p-0.5 rounded-lg border border-emerald-500/20 shadow-sm">
+                                   <label className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">Rerank Key</label>
+                                   <div className="flex bg-white dark:bg-emerald-900/40 p-0.5 rounded-lg border border-slate-200 dark:border-emerald-500/20">
                                      {["main", "embedding", "custom"].map((s) => (
-                                       <button type="button" key={s} onClick={() => setConfig({...config, rerankKeySource: s as any})} className={cn("px-1.5 py-1 text-[7px] font-black uppercase rounded-md transition-all", (config.rerankKeySource || "main") === s ? "bg-emerald-500 text-white" : "text-emerald-500/40 hover:text-emerald-500")}>
+                                       <button type="button" key={s} onClick={() => setConfig({...config, rerankKeySource: s as any})} className={cn("px-2 py-1 text-[8px] font-bold uppercase rounded-md transition-colors", (config.rerankKeySource || "main") === s ? "bg-emerald-600 text-white" : "text-slate-600 dark:text-emerald-300 hover:text-emerald-700")}>
                                          {s.toUpperCase()}
                                        </button>
                                      ))}
                                    </div>
                                  </div>
                                  {config.rerankKeySource === "custom" && (
-                                   <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
-                                     <input type="password" placeholder="" className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl pl-10 pr-3 py-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(config.rerankProvider !== "custom" && !config.rerankApiKey))} value={config.rerankApiKey || ""} onChange={(e) => setConfig({...config, rerankApiKey: e.target.value})} />
-                                     <Key size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500/40" />
+                                   <div className="relative">
+                                     <input type="password" placeholder="" className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl pl-10 pr-3 py-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(config.rerankProvider !== "custom" && !config.rerankApiKey))} value={config.rerankApiKey || ""} onChange={(e) => setConfig({...config, rerankApiKey: e.target.value})} />
+                                     <Key size={14} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-emerald-400" />
                                    </div>
                                  )}
                               </div>
@@ -753,68 +754,68 @@ export default function RAGChatPage() {
 
                     <div className="flex items-center justify-between px-1">
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-black text-slate-700 dark:text-emerald-50/90 tracking-tight">Hybrid Search (BM25 + RRF)</span>
-                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Dense + Exact Keywords</span>
+                        <span className="text-[11px] font-bold text-slate-800 dark:text-emerald-50/90">Hybrid Search (BM25 + RRF)</span>
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">Dense + Exact Keywords</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={config.useHybridSearch !== false} onChange={(e) => setConfig({...config, useHybridSearch: e.target.checked})} />
-                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                        <input type="checkbox" aria-label="Hybrid Search" className="sr-only peer" checked={config.useHybridSearch !== false} onChange={(e) => setConfig({...config, useHybridSearch: e.target.checked})} />
+                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                       </label>
                     </div>
 
                     <div className="flex items-center justify-between px-1">
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-black text-slate-700 dark:text-emerald-50/90 tracking-tight">Query Rewriting</span>
-                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Resolve &amp; Expand Intent</span>
+                        <span className="text-[11px] font-bold text-slate-800 dark:text-emerald-50/90">Query Rewriting</span>
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">Resolve &amp; Expand Intent</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={config.useQueryRewrite !== false} onChange={(e) => setConfig({...config, useQueryRewrite: e.target.checked})} />
-                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                        <input type="checkbox" aria-label="Query Rewriting" className="sr-only peer" checked={config.useQueryRewrite !== false} onChange={(e) => setConfig({...config, useQueryRewrite: e.target.checked})} />
+                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                       </label>
                     </div>
 
                     <div className="flex items-center justify-between px-1">
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-black text-slate-700 dark:text-emerald-50/90 tracking-tight">Agentic Multi-Hop RAG</span>
-                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Decompose &amp; Corrective Hop</span>
+                        <span className="text-[11px] font-bold text-slate-800 dark:text-emerald-50/90">Agentic Multi-Hop RAG</span>
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">Decompose &amp; Corrective Hop</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={!!config.useAgenticRag} onChange={(e) => setConfig({...config, useAgenticRag: e.target.checked})} />
-                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                        <input type="checkbox" aria-label="Agentic Multi-Hop RAG" className="sr-only peer" checked={!!config.useAgenticRag} onChange={(e) => setConfig({...config, useAgenticRag: e.target.checked})} />
+                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                       </label>
                     </div>
 
                     <div className="flex items-center justify-between px-1">
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-black text-slate-700 dark:text-emerald-50/90 tracking-tight">Knowledge Graph (GraphRAG)</span>
-                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Entity-Relation Traversal</span>
+                        <span className="text-[11px] font-bold text-slate-800 dark:text-emerald-50/90">Knowledge Graph (GraphRAG)</span>
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">Entity-Relation Traversal</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={!!config.useGraphRag} onChange={(e) => setConfig({...config, useGraphRag: e.target.checked})} />
-                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                        <input type="checkbox" aria-label="Knowledge Graph" className="sr-only peer" checked={!!config.useGraphRag} onChange={(e) => setConfig({...config, useGraphRag: e.target.checked})} />
+                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                       </label>
                     </div>
 
                     <div className="flex items-center justify-between px-1">
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-black text-slate-700 dark:text-emerald-50/90 tracking-tight">Full Context (CAG)</span>
-                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Bypass Vector Search</span>
+                        <span className="text-[11px] font-bold text-slate-800 dark:text-emerald-50/90">Full Context (CAG)</span>
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">Bypass Vector Search</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={!!config.useCag} onChange={(e) => setConfig({...config, useCag: e.target.checked})} />
-                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                        <input type="checkbox" aria-label="Full Context CAG" className="sr-only peer" checked={!!config.useCag} onChange={(e) => setConfig({...config, useCag: e.target.checked})} />
+                        <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                       </label>
                     </div>
 
                     {!config.useCag && (
                       <div className="grid grid-cols-2 gap-3 px-1">
                         <div className="space-y-1.5">
-                          <label className="text-[9px] font-black text-slate-400 dark:text-emerald-500/50 uppercase tracking-widest">Top-K Context</label>
+                          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Top-K Context</label>
                           <input
                             type="number"
                             min={1}
                             max={12}
-                            className="w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                            className="w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-2.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors"
                             value={config.topK ?? 5}
                             onChange={(e) => {
                               const v = parseInt(e.target.value, 10);
@@ -824,15 +825,16 @@ export default function RAGChatPage() {
                         </div>
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <label className="text-[9px] font-black text-slate-400 dark:text-emerald-500/50 uppercase tracking-widest">Min Sim</label>
-                            <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400">{(config.similarityThreshold ?? 0.3).toFixed(2)}</span>
+                            <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Min Sim</label>
+                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{(config.similarityThreshold ?? 0.3).toFixed(2)}</span>
                           </div>
                           <input
+                            aria-label="Minimum similarity threshold"
                             type="range"
                             min={0}
                             max={0.9}
                             step={0.05}
-                            className="w-full accent-emerald-500 cursor-pointer mt-2"
+                            className="w-full accent-emerald-600 cursor-pointer mt-2"
                             value={config.similarityThreshold ?? 0.3}
                             onChange={(e) => setConfig({ ...config, similarityThreshold: parseFloat(e.target.value) })}
                           />
@@ -842,37 +844,37 @@ export default function RAGChatPage() {
 
                     <div className="space-y-2 pt-2">
                        <div className="flex items-center justify-between px-1">
-                          <label className="text-[10px] font-black text-slate-400 dark:text-emerald-500/50 uppercase tracking-widest">Context Format</label>
-                          <div className="flex bg-slate-100 dark:bg-emerald-900/40 p-0.5 rounded-lg border border-emerald-500/10 shadow-sm">
+                          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Context Format</label>
+                          <div className="flex bg-slate-100 dark:bg-emerald-900/40 p-0.5 rounded-lg border border-slate-200 dark:border-emerald-500/20">
                             {["json", "toon"].map((f) => (
-                              <button type="button" key={f} onClick={() => setConfig({...config, contextFormat: f as any})} className={cn("px-3 py-1 text-[8px] font-black uppercase rounded-md transition-all", (config.contextFormat || "toon") === f ? "bg-emerald-500 text-white shadow-lg" : "text-emerald-500/40 hover:text-emerald-500")}>
+                              <button type="button" key={f} onClick={() => setConfig({...config, contextFormat: f as any})} className={cn("px-3 py-1 text-[9px] font-bold uppercase rounded-md transition-colors", (config.contextFormat || "toon") === f ? "bg-emerald-600 text-white" : "text-slate-600 dark:text-emerald-300 hover:text-emerald-700")}>
                                 {f.toUpperCase()}
                               </button>
                             ))}
                           </div>
                        </div>
-                       <p className="text-[9px] text-emerald-500/30 px-1 leading-tight italic">TOON optimization reduces token usage by ~40% for large documents.</p>
+                       <p className="text-[10px] text-slate-600 dark:text-slate-400 px-1 leading-tight">Tabular TOON format omits repeated JSON keys in retrieved context.</p>
                     </div>
                   </div>
                 </div>
 
-                {/* 3.4 DISTRIBUTED STATE (REDIS) */}
-                <div className="bg-white/40 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/10 rounded-2xl p-5 space-y-5 shadow-sm">
+                {/* Distributed state */}
+                <div className="bg-slate-50/70 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/15 rounded-2xl p-5 space-y-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600/60">Distributed State</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Distributed State</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer scale-90">
-                      <input type="checkbox" className="sr-only peer" checked={!!config.useRedis} onChange={(e) => setConfig({...config, useRedis: e.target.checked})} />
-                      <div className="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                      <input type="checkbox" aria-label="Distributed State Redis" className="sr-only peer" checked={!!config.useRedis} onChange={(e) => setConfig({...config, useRedis: e.target.checked})} />
+                      <div className="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                     </label>
                   </div>
                   
                   {config.useRedis && (
-                    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Redis Provider</label>
-                        <select className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-black outline-none cursor-pointer", fieldErr(!config.redisProvider))} value={config.redisProvider || ""} onChange={(e) => setConfig({...config, redisProvider: e.target.value as any})}>
+                        <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Redis Provider</label>
+                        <select className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600", fieldErr(!config.redisProvider))} value={config.redisProvider || ""} onChange={(e) => setConfig({...config, redisProvider: e.target.value as any})}>
                           <option value="" disabled hidden>Please Select Provider</option>
                           <option value="upstash">Upstash (REST)</option>
                           <option value="standard">Standard (TCP)</option>
@@ -880,55 +882,55 @@ export default function RAGChatPage() {
                       </div>
 
                       {config.redisProvider && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="space-y-4">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase px-1 tracking-widest">
+                            <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase px-1 tracking-wide">
                               {config.redisProvider === "standard" ? "Connection Host" : "Upstash URL"}
                             </label>
-                            <input type="text" placeholder={config.redisProvider === "standard" ? "localhost or 127.0.0.1" : "https://..."} className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(config.redisProvider === "standard" ? !config.redisHost : !config.redisUrl))} value={config.redisProvider === "standard" ? (config.redisHost || "") : (config.redisUrl || "")} onChange={(e) => config.redisProvider === "standard" ? setConfig({...config, redisHost: e.target.value}) : setConfig({...config, redisUrl: e.target.value})} />
+                            <input type="text" placeholder={config.redisProvider === "standard" ? "localhost or 127.0.0.1" : "https://..."} className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(config.redisProvider === "standard" ? !config.redisHost : !config.redisUrl))} value={config.redisProvider === "standard" ? (config.redisHost || "") : (config.redisUrl || "")} onChange={(e) => config.redisProvider === "standard" ? setConfig({...config, redisHost: e.target.value}) : setConfig({...config, redisUrl: e.target.value})} />
                           </div>
 
                           {config.redisProvider === "standard" && (
                             <div className="flex gap-3">
                               <div className="flex-1 space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase px-1 tracking-widest text-[9px]">Port</label>
-                                <input type="number" className="w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all" value={config.redisPort ?? 6379} onChange={(e) => { const v = parseInt(e.target.value, 10); setConfig({...config, redisPort: Number.isNaN(v) ? 6379 : v}); }} />
+                                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase px-1 tracking-wide">Port</label>
+                                <input type="number" className="w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors" value={config.redisPort ?? 6379} onChange={(e) => { const v = parseInt(e.target.value, 10); setConfig({...config, redisPort: Number.isNaN(v) ? 6379 : v}); }} />
                               </div>
                               <div className="flex-1 space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase px-1 tracking-widest text-[9px]">DB Index</label>
-                                <input type="number" min="0" max="15" className="w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all" value={config.redisDb ?? 0} onChange={(e) => { const v = parseInt(e.target.value, 10); setConfig({...config, redisDb: Number.isNaN(v) ? 0 : v}); }} />
+                                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase px-1 tracking-wide">DB Index</label>
+                                <input type="number" min="0" max="15" className="w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors" value={config.redisDb ?? 0} onChange={(e) => { const v = parseInt(e.target.value, 10); setConfig({...config, redisDb: Number.isNaN(v) ? 0 : v}); }} />
                               </div>
                             </div>
                           )}
 
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase px-1 tracking-widest">
+                            <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase px-1 tracking-wide">
                               {config.redisProvider === "standard" ? "Password" : "Rest Token"}
                             </label>
-                            <input type="password" placeholder="" className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all", fieldErr(config.redisProvider === "upstash" && !config.redisToken))} value={config.redisProvider === "standard" ? (config.redisPassword || "") : (config.redisToken || "")} onChange={(e) => config.redisProvider === "standard" ? setConfig({...config, redisPassword: e.target.value}) : setConfig({...config, redisToken: e.target.value})} />
+                            <input type="password" placeholder="" className={cn("w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors", fieldErr(config.redisProvider === "upstash" && !config.redisToken))} value={config.redisProvider === "standard" ? (config.redisPassword || "") : (config.redisToken || "")} onChange={(e) => config.redisProvider === "standard" ? setConfig({...config, redisPassword: e.target.value}) : setConfig({...config, redisToken: e.target.value})} />
                           </div>
 
                           {config.redisProvider === "standard" && (
                             <div className="flex items-center justify-between px-1 py-1">
                               <div className="flex items-center gap-2">
-                                <Lock size={12} className="text-emerald-500/60" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">TLS / SSL</span>
+                                <Lock size={12} aria-hidden="true" className="text-emerald-600 dark:text-emerald-400" />
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">TLS / SSL</span>
                               </div>
                               <label className="relative inline-flex items-center cursor-pointer scale-75">
-                                <input type="checkbox" className="sr-only peer" checked={!!config.redisTls} onChange={(e) => setConfig({...config, redisTls: e.target.checked})} />
-                                <div className="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                <input type="checkbox" aria-label="Redis TLS SSL" className="sr-only peer" checked={!!config.redisTls} onChange={(e) => setConfig({...config, redisTls: e.target.checked})} />
+                                <div className="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
                               </label>
                             </div>
                           )}
 
                           <div className="flex gap-3 pt-1">
                             <div className="flex-1 space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase px-1 tracking-widest">Limit TTL (s)</label>
-                              <input type="number" min="1" className="w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all" value={config.redisRateLimitTtl ?? 60} onChange={(e) => { const v = parseInt(e.target.value, 10); setConfig({...config, redisRateLimitTtl: Number.isNaN(v) ? 60 : v}); }} />
+                              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase px-1 tracking-wide">Limit TTL (s)</label>
+                              <input type="number" min="1" className="w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors" value={config.redisRateLimitTtl ?? 60} onChange={(e) => { const v = parseInt(e.target.value, 10); setConfig({...config, redisRateLimitTtl: Number.isNaN(v) ? 60 : v}); }} />
                             </div>
                             <div className="flex-1 space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase px-1 tracking-widest">Cache TTL (s)</label>
-                              <input type="number" min="60" className="w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all" value={config.redisCacheTtl ?? 3600} onChange={(e) => { const v = parseInt(e.target.value, 10); setConfig({...config, redisCacheTtl: Number.isNaN(v) ? 3600 : v}); }} />
+                              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase px-1 tracking-wide">Cache TTL (s)</label>
+                              <input type="number" min="60" className="w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors" value={config.redisCacheTtl ?? 3600} onChange={(e) => { const v = parseInt(e.target.value, 10); setConfig({...config, redisCacheTtl: Number.isNaN(v) ? 3600 : v}); }} />
                             </div>
                           </div>
                         </div>
@@ -937,16 +939,16 @@ export default function RAGChatPage() {
                   )}
                 </div>
 
-                {/* 3.5 ENTERPRISE GOVERNANCE & RBAC */}
-                <div className="bg-white/40 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/10 rounded-2xl p-5 space-y-4 shadow-sm">
+                {/* Enterprise governance and RBAC */}
+                <div className="bg-slate-50/70 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-500/15 rounded-2xl p-5 space-y-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600/60">Enterprise Governance</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Enterprise Governance</span>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Tenant Namespace</label>
+                    <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Tenant Namespace</label>
                     <input
-                      className="w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                      className="w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-2.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors"
                       placeholder="default"
                       value={config.tenantId || "default"}
                       onChange={(e) => setConfig({ ...config, tenantId: e.target.value.replace(/[^a-zA-Z0-9_-]/g, "") || "default" })}
@@ -954,9 +956,9 @@ export default function RAGChatPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-500/40 uppercase tracking-widest px-1">Active User Roles (RBAC)</label>
+                    <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">Active User Roles (RBAC)</label>
                     <input
-                      className="w-full bg-white dark:bg-emerald-900/60 border border-slate-200 dark:border-emerald-500/10 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                      className="w-full bg-white dark:bg-emerald-900/60 border border-slate-300 dark:border-emerald-500/20 rounded-xl p-2.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors"
                       placeholder="member, engineering"
                       value={rolesInput}
                       onChange={(e) => {
@@ -969,23 +971,23 @@ export default function RAGChatPage() {
 
                   <div className="flex items-center justify-between px-1">
                     <div className="flex flex-col">
-                      <span className="text-[11px] font-black text-slate-700 dark:text-emerald-50/90 tracking-tight">PII Redaction</span>
-                      <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Mask Emails, Phones, Cards</span>
+                      <span className="text-[11px] font-bold text-slate-800 dark:text-emerald-50/90">PII Redaction</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">Mask Emails, Phones, Cards</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer scale-90">
-                      <input type="checkbox" className="sr-only peer" checked={!!config.enablePiiRedaction} onChange={(e) => setConfig({ ...config, enablePiiRedaction: e.target.checked })} />
-                      <div className="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                      <input type="checkbox" aria-label="PII Redaction" className="sr-only peer" checked={!!config.enablePiiRedaction} onChange={(e) => setConfig({ ...config, enablePiiRedaction: e.target.checked })} />
+                      <div className="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                     </label>
                   </div>
 
                   <div className="flex items-center justify-between px-1">
                     <div className="flex flex-col">
-                      <span className="text-[11px] font-black text-slate-700 dark:text-emerald-50/90 tracking-tight">Structured Audit Log</span>
-                      <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Track Query &amp; Ingest Events</span>
+                      <span className="text-[11px] font-bold text-slate-800 dark:text-emerald-50/90">Structured Audit Log</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">Track Query &amp; Ingest Events</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer scale-90">
-                      <input type="checkbox" className="sr-only peer" checked={config.enableAuditLog !== false} onChange={(e) => setConfig({ ...config, enableAuditLog: e.target.checked })} />
-                      <div className="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                      <input type="checkbox" aria-label="Structured Audit Log" className="sr-only peer" checked={config.enableAuditLog !== false} onChange={(e) => setConfig({ ...config, enableAuditLog: e.target.checked })} />
+                      <div className="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-emerald-900/40 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                     </label>
                   </div>
                 </div>
@@ -1017,7 +1019,7 @@ export default function RAGChatPage() {
         <header className="h-16 bg-white dark:bg-[#0b1220] border-b border-slate-200 dark:border-emerald-500/15 flex items-center px-6 md:px-8 justify-between shrink-0 z-10">
           <div className="flex items-center gap-4">
             {!isSidebarOpen && (
-              <button type="button" aria-label="Open sidebar" onClick={() => setIsSidebarOpen(true)} className="hover:bg-emerald-50 dark:hover:bg-emerald-500/10 p-2.5 rounded-xl text-emerald-700 dark:text-emerald-300 transition-colors bg-white dark:bg-emerald-950/30 border border-slate-200 dark:border-emerald-800/40">
+              <button type="button" aria-label="Open sidebar" onClick={() => setIsSidebarOpen(true)} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-500/10 p-2.5 rounded-xl text-emerald-700 dark:text-emerald-300 transition-colors bg-white dark:bg-emerald-950/30 border border-slate-200 dark:border-emerald-800/40">
                 <PanelLeftOpen size={20} aria-hidden="true" />
               </button>
             )}
@@ -1059,20 +1061,20 @@ export default function RAGChatPage() {
           )}
           
           {messages.map((m: any) => (
-            <div key={m.id} className={cn("flex gap-5 max-w-4xl mx-auto group animate-in slide-in-from-bottom-4 duration-500", m.role === "user" ? "flex-row-reverse" : "flex-row")}>
+            <div key={m.id} className={cn("flex gap-4 md:gap-5 max-w-4xl mx-auto", m.role === "user" ? "flex-row-reverse" : "flex-row")}>
               <div className={cn(
-                "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 font-black text-[10px] shadow-lg transition-transform duration-300 group-hover:scale-110", 
-                m.role === "user" ? "glossy-emerald text-white" : "bg-white dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-slate-100 dark:border-emerald-800/30"
+                "w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center shrink-0 font-bold text-[10px]", 
+                m.role === "user" ? "glossy-emerald text-white" : "bg-white dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-slate-200 dark:border-emerald-700/40"
               )}>
                 {m.role === "user" ? "USER" : "AI"}
               </div>
               <div className={cn(
-                "flex-1 p-7 rounded-[2.5rem] text-[15px] leading-relaxed shadow-xl transition-all duration-300 group-hover:shadow-2xl", 
+                "flex-1 p-5 md:p-6 rounded-2xl text-[15px] leading-relaxed shadow-xs", 
                 m.role === "user" 
                   ? "glossy-emerald text-white rounded-tr-none" 
-                  : "glass-emerald text-slate-800 dark:text-emerald-50/90 rounded-tl-none"
+                  : "glass-emerald text-slate-900 dark:text-emerald-50/95 rounded-tl-none"
               )}>
-                <div className={cn("prose prose-emerald prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:font-black prose-code:p-1 prose-code:rounded", m.role === "user" ? "prose-p:text-white prose-strong:text-emerald-100 prose-code:bg-black/20 prose-code:text-white" : "prose-code:bg-emerald-500/10 prose-code:text-emerald-500")}>
+                <div className={cn("prose prose-emerald prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:font-bold prose-code:p-1 prose-code:rounded", m.role === "user" ? "prose-p:text-white prose-strong:text-emerald-100 prose-code:bg-black/20 prose-code:text-white" : "prose-code:bg-emerald-500/10 prose-code:text-emerald-700 dark:prose-code:text-emerald-300")}>
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {getMessageContent(m)}
                   </ReactMarkdown>
@@ -1083,45 +1085,45 @@ export default function RAGChatPage() {
                   const grounded = getGroundedness(m);
                   if (!pipeline || m.role === "user") return null;
                   return (
-                    <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[9px] font-black uppercase tracking-wider">
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                    <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide">
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
                         {pipeline.mode}
                       </span>
                       {pipeline.vectorStore && (
-                        <span className="px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
+                        <span className="px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/20">
                           {pipeline.vectorStore}
                         </span>
                       )}
                       {pipeline.wasRewritten && (
-                        <span title={pipeline.rewrittenQuery || ""} className="px-2.5 py-1 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 cursor-help">
+                        <span title={pipeline.rewrittenQuery || ""} className="px-2.5 py-1 rounded-full bg-teal-500/10 text-teal-800 dark:text-teal-300 border border-teal-500/20 cursor-help">
                           Query Rewritten
                         </span>
                       )}
                       {pipeline.reranked && (
-                        <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                        <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
                           Reranked
                         </span>
                       )}
-                      <span className="px-2.5 py-1 rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-300 border border-slate-500/15">
+                      <span className="px-2.5 py-1 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20">
                         {pipeline.finalCount} {pipeline.finalCount === 1 ? "Chunk" : "Chunks"}
                       </span>
                       {pipeline.hops > 1 && (
-                        <span className="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                        <span className="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-800 dark:text-purple-300 border border-purple-500/20">
                           {pipeline.hops} Hops
                         </span>
                       )}
                       {pipeline.graphHits > 0 && (
-                        <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
+                        <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 border border-indigo-500/20">
                           Graph {pipeline.graphHits}
                         </span>
                       )}
                       {pipeline.trace?.totalMs !== undefined && (
-                        <span className="px-2.5 py-1 rounded-full bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/15">
+                        <span className="px-2.5 py-1 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20">
                           {pipeline.trace.totalMs}ms
                         </span>
                       )}
                       {grounded && (
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-600/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/25">
                           Grounded {grounded.score}%
                         </span>
                       )}
@@ -1130,12 +1132,12 @@ export default function RAGChatPage() {
                 })()}
 
                 {getSources(m) && (
-                  <div className={cn("mt-6 pt-6 border-t", m.role === "user" ? "border-white/20" : "border-slate-100 dark:border-emerald-800/30")}>
-                    <div className="flex items-center gap-2 mb-4">
-                       <FileText size={16} className={m.role === "user" ? "text-white/60" : "text-emerald-600 dark:text-emerald-400"} />
-                       <span className={cn("text-[10px] font-black uppercase tracking-[0.2em] opacity-50", m.role === "user" ? "text-white" : "text-emerald-600 dark:text-emerald-400")}>Evidence & Sources</span>
+                  <div className={cn("mt-6 pt-5 border-t", m.role === "user" ? "border-white/20" : "border-slate-200 dark:border-emerald-800/40")}>
+                    <div className="flex items-center gap-2 mb-3">
+                       <FileText size={16} aria-hidden="true" className={m.role === "user" ? "text-white/80" : "text-emerald-700 dark:text-emerald-400"} />
+                       <span className={cn("text-[10px] font-bold uppercase tracking-wide", m.role === "user" ? "text-white/90" : "text-emerald-800 dark:text-emerald-300")}>Evidence &amp; Sources</span>
                     </div>
-                    <div className="flex flex-wrap gap-2.5">
+                    <div className="flex flex-wrap gap-2">
                       {(() => {
                         const sources = getSources(m);
                         if (!sources) return null;
@@ -1147,31 +1149,52 @@ export default function RAGChatPage() {
                           return acc;
                         }, {});
 
-                        return Object.values(grouped).map((group: any, gIdx: number) => (
-                          <div key={gIdx} className={cn("group/source relative px-4 py-2 rounded-2xl border text-[10px] font-black transition-all cursor-help hover:-translate-y-0.5 shadow-sm", m.role === "user" ? "bg-white/10 border-white/20 text-white hover:bg-white/20" : "bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-100/50 dark:border-emerald-800/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-500/10")}>
-                            <span className="opacity-70 mr-1.5 tracking-tighter">{group.indices.map((i: number) => `[${i}]`).join("")}</span>
-                            {group.filename}
-                            <div className="absolute bottom-full mb-3 left-0 w-80 max-h-96 overflow-y-auto no-scrollbar bg-white dark:bg-emerald-900 rounded-[2rem] shadow-2xl opacity-0 group-hover/source:opacity-100 pointer-events-none transition-all duration-300 border border-slate-100 dark:border-emerald-800 translate-y-2 group-hover/source:translate-y-0 z-50 p-1">
+                        return Object.values(grouped).map((group: any, gIdx: number) => {
+                          const srcKey = `${m.id}-${gIdx}`;
+                          const isExpanded = openSourceKey === srcKey;
+                          return (
+                          <div key={gIdx} className="group/source relative">
+                            <button
+                              type="button"
+                              aria-expanded={isExpanded}
+                              onClick={() => setOpenSourceKey(isExpanded ? null : srcKey)}
+                              className={cn(
+                                "px-3.5 py-2 rounded-xl border text-[11px] font-bold transition-colors text-left",
+                                m.role === "user"
+                                  ? "bg-white/15 border-white/25 text-white hover:bg-white/25"
+                                  : "bg-white dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-700/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/40"
+                              )}
+                            >
+                              <span className="opacity-80 mr-1.5">{group.indices.map((i: number) => `[${i}]`).join("")}</span>
+                              {group.filename}
+                            </button>
+                            <div className={cn(
+                              "absolute bottom-full mb-2 left-0 w-72 sm:w-80 max-w-[calc(100vw-3rem)] max-h-96 overflow-y-auto no-scrollbar bg-white dark:bg-emerald-950 rounded-2xl shadow-lg border border-slate-200 dark:border-emerald-800 z-50 p-1 transition-opacity duration-200",
+                              isExpanded
+                                ? "opacity-100 pointer-events-auto"
+                                : "opacity-0 pointer-events-none group-hover/source:opacity-100 group-hover/source:pointer-events-auto"
+                            )}>
                               {group.snippets.map((snip: any, sIdx: number) => (
-                                <div key={sIdx} className={cn("p-5 space-y-2", sIdx !== 0 && "border-t border-slate-100 dark:border-emerald-800/50")}>
+                                <div key={sIdx} className={cn("p-4 space-y-1.5", sIdx !== 0 && "border-t border-slate-200 dark:border-emerald-800/60")}>
                                   <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2 text-emerald-500">
-                                      <Shield size={10} />
-                                      <span className="text-[9px] uppercase font-black tracking-widest">Evidence [{snip.index}]</span>
+                                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                                      <Shield size={11} aria-hidden="true" />
+                                      <span className="text-[10px] uppercase font-bold tracking-wide">Evidence [{snip.index}]</span>
                                     </div>
-                                    <span className="text-[8px] font-black text-slate-400 uppercase">Page: {snip.page}</span>
+                                    <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase">Page: {snip.page}</span>
                                   </div>
                                   {snip.section && (
-                                    <p className="text-[9px] font-black uppercase tracking-wider text-emerald-600/70 dark:text-emerald-300/70 truncate">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300 truncate">
                                       {snip.section}
                                     </p>
                                   )}
-                                  <p className="text-[11px] leading-relaxed font-bold italic line-clamp-4 text-slate-700 dark:text-emerald-50/90">&ldquo;{snip.content}&rdquo;</p>
+                                  <p className="text-xs leading-relaxed font-medium line-clamp-4 text-slate-700 dark:text-emerald-50/90">&ldquo;{snip.content}&rdquo;</p>
                                 </div>
                               ))}
                             </div>
                           </div>
-                        ));
+                        );
+                        });
                       })()}
                     </div>
                   </div>
@@ -1181,11 +1204,11 @@ export default function RAGChatPage() {
           ))}
           
           {isChatLoading && (
-            <div className="flex gap-5 max-w-4xl mx-auto animate-in fade-in duration-500">
-              <div className="w-10 h-10 rounded-2xl glass-emerald flex items-center justify-center">
-                 <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <div className="flex gap-4 md:gap-5 max-w-4xl mx-auto">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl glass-emerald flex items-center justify-center">
+                 <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
               </div>
-              <div className="flex-1 p-7 glass-emerald rounded-[2.5rem] rounded-tl-none italic text-emerald-600/60 dark:text-emerald-400/60 text-[13px] font-bold tracking-tight">
+              <div className="flex-1 p-5 md:p-6 glass-emerald rounded-2xl rounded-tl-none text-slate-700 dark:text-emerald-200 text-sm font-semibold">
                 Scanning context and generating response...
               </div>
             </div>
