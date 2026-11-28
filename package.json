@@ -13,7 +13,7 @@
     "@ai-sdk/anthropic": "^3.0.146",
     "@ai-sdk/google": "^3.0.152",
     "@ai-sdk/openai": "^3.0.147",
-    "@ai-sdk/react": "^3.0.342",
+    "@ai-sdk/react": "^4.0.186",
     "@anthropic-ai/sdk": "0.92.0",
     "@google/generative-ai": "0.24.1",
     "@langchain/community": "1.1.27",
