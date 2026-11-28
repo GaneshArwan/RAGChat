@@ -1,0 +1,15 @@
+.git
+.github
+.agents
+.next
+node_modules
+chroma_data
+.tmp-test
+services
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+GEMINI.md
+DESIGN.md

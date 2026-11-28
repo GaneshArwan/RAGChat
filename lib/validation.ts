@@ -11,11 +11,24 @@ export { validateSafeUrl, isSafeHost };
 export function sanitizeLog(msg: string): string {
   if (!msg) return msg;
   // Redact API keys: match common API key patterns (e.g. sk-..., AIza...)
-  let sanitized = msg.replace(/(sk-[a-zA-Z0-9]{20,})|(AIza[a-zA-Z0-9_-]{35})/g, "[REDACTED_KEY]");
-  // Redact Redis/DB passwords in connection strings: e.g. redis://:password@host
-  sanitized = sanitized.replace(/(redis|mongodb|postgresql|mysql):\/\/([^:]+):([^@]+)@/g, "$1://$2:[REDACTED_PASSWORD]@");
-  sanitized = sanitized.replace(/:[^\s@]+@/g, ":[REDACTED_PASSWORD]@");
+  let sanitized = msg.replace(/(sk-[a-zA-Z0-9_-]{20,})|(AIza[a-zA-Z0-9_-]{35})/g, "[REDACTED_KEY]");
+  // Redact Redis/DB passwords in connection strings: e.g. redis://:password@host or redis://user:password@host
+  sanitized = sanitized.replace(/(rediss?|mongodb(?:\+srv)?|postgresql|mysql):\/\/([^:@\s]*):([^@\s]+)@/g, "$1://$2:[REDACTED_PASSWORD]@");
+  sanitized = sanitized.replace(/:[^/\s@]+@/g, ":[REDACTED_PASSWORD]@");
   return sanitized;
+}
+
+export function isSafeFilename(filename: string): boolean {
+  if (typeof filename !== "string" || !filename || filename.length > 255) return false;
+  if (filename !== filename.trim()) return false;
+  if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) return false;
+  if (/[\x00-\x1f\x7f]/.test(filename)) return false;
+  if (!/^[a-zA-Z0-9_\-\.\s()]+$/.test(filename)) return false;
+  return /[a-zA-Z0-9]/.test(filename);
+}
+
+export function getClientIp(req: Request): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
 }
 
 export async function validateApiKey(config: AppConfig): Promise<boolean> {

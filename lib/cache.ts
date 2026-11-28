@@ -13,6 +13,7 @@ import { sanitizeLog } from "./validation";
 interface IRedisClient {
   get<T>(key: string): Promise<T | null>;
   set(key: string, value: any, options?: { px: number }): Promise<any>;
+  close(): Promise<void> | void;
 }
 
 class UpstashDriver implements IRedisClient {
@@ -20,11 +21,22 @@ class UpstashDriver implements IRedisClient {
   constructor(url: string, token: string) { this.client = new UpstashRedis({ url, token }); }
   async get<T>(key: string) { return await this.client.get<T>(key); }
   async set(key: string, value: any, options?: { px: number }) { return await this.client.set(key, value, options); }
+  close() {}
 }
 
 class StandardDriver implements IRedisClient {
   private client: Redis;
-  constructor(options: string | RedisOptions) { this.client = new Redis(options as any); }
+  constructor(options: string | RedisOptions) {
+    const baseOpts: RedisOptions = {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
+      retryStrategy: () => null,
+    };
+    this.client = typeof options === "string"
+      ? new Redis(options, baseOpts)
+      : new Redis({ ...options, ...baseOpts });
+    this.client.on("error", () => {});
+  }
   async get<T>(key: string) {
     const val = await this.client.get(key);
     return val ? JSON.parse(val) as T : null;
@@ -34,6 +46,7 @@ class StandardDriver implements IRedisClient {
     if (options?.px) return await this.client.set(key, str, "PX", options.px);
     return await this.client.set(key, str);
   }
+  close() { this.client.disconnect(); }
 }
 
 function getRedisClient(config: AppConfig): IRedisClient | null {
@@ -94,6 +107,7 @@ async function getCachedResource(hash: string, config: AppConfig): Promise<{ res
       const data = await redis.get<{ resourceName: string, expiresAt: number }>(`cache:${hash}`);
       if (data && data.expiresAt > Date.now()) return data;
     } catch (e: any) { console.error("[Cache] Redis lookup failed:", sanitizeLog(e.message || "Unknown error")); }
+    finally { await redis.close(); }
   }
   const existing = localGeminiCacheRegistry.get(hash);
   if (existing && existing.expiresAt > Date.now()) return existing;
@@ -107,6 +121,7 @@ async function registerCachedResource(hash: string, resourceName: string, ttlMs:
     try {
       await redis.set(`cache:${hash}`, data, { px: ttlMs });
     } catch (e: any) { console.error("[Cache] Redis registration failed:", sanitizeLog(e.message || "Unknown error")); }
+    finally { await redis.close(); }
   }
   localGeminiCacheRegistry.set(hash, data);
 }
@@ -132,7 +147,7 @@ export async function getOrCreateGeminiCache(context: string, config: AppConfig)
     const resourceName = cache.name;
     if (!resourceName) throw new Error("API returned an empty cache name");
     console.log(`[Cache] Gemini cache created: ${resourceName} (TTL: ${cacheTtlSeconds}s)`);
-    await registerCachedResource(hash, resourceName, (cacheTtlSeconds - 60) * 1000, config);
+    await registerCachedResource(hash, resourceName, Math.max(1000, (cacheTtlSeconds - 60) * 1000), config);
     return resourceName;
   } catch (error: any) {
     if (error.message?.includes("429")) console.warn("[Cache] Gemini Cache limit exceeded (Free Tier).");

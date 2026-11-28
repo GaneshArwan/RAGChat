@@ -67,6 +67,25 @@ export const ConfigSchema = z.object({
   // CAG (Full Context) Controls
   useCag: z.boolean().default(false),
 
+  // Modern RAG Pipeline Controls
+  useHybridSearch: z.boolean().default(true),
+  useQueryRewrite: z.boolean().default(true),
+  useAgenticRag: z.boolean().default(false),
+  useGraphRag: z.boolean().default(false),
+  topK: z.number().int().min(1).max(20).default(5),
+
+  // Enterprise Vector Store Adapter
+  vectorStoreProvider: z.enum(["chroma", "qdrant", "pinecone"]).default("chroma"),
+  vectorStoreUrl: z.string().optional(),
+  vectorStoreApiKey: z.string().optional(),
+  vectorStoreIndex: z.string().optional(),
+
+  // Enterprise Governance & Multi-Tenancy
+  tenantId: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/).default("default"),
+  userRoles: z.array(z.string().max(64)).default(["member"]),
+  enablePiiRedaction: z.boolean().default(false),
+  enableAuditLog: z.boolean().default(true),
+
   // Safety & Quality
   similarityThreshold: z.number().min(0).max(1).default(0.3),
   contextFormat: z.enum(["json", "toon"]).default("toon"),
@@ -87,6 +106,7 @@ export const ConfigSchema = z.object({
   if (data.baseUrl && !validateSafeUrl(data.baseUrl)) return false;
   if (data.embeddingBaseUrl && !validateSafeUrl(data.embeddingBaseUrl)) return false;
   if (data.rerankBaseUrl && !validateSafeUrl(data.rerankBaseUrl)) return false;
+  if (data.vectorStoreUrl && !validateSafeUrl(data.vectorStoreUrl)) return false;
   if (data.redisUrl && !validateSafeUrl(data.redisUrl)) return false;
   if (data.redisHost && !isSafeHost(data.redisHost)) return false;
   return true;
@@ -116,6 +136,7 @@ export const DEFAULT_CONFIGS: Record<string, Partial<AppConfig>> = {
     embeddingProvider: "custom",
     embeddingModelId: "mxbai-embed-large",
     embeddingBaseUrl: "http://localhost:11434",
+    rerankModelId: "bge-reranker",
   },
   cohere: {
     rerankModelId: "rerank-english-v3.0",

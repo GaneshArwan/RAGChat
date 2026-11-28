@@ -1,37 +1,39 @@
 import { NextResponse } from "next/server";
-import { ChromaClient } from "chromadb";
 import { rateLimit } from "@/lib/rate-limit";
-import { sanitizeLog, validateSafeUrl } from "@/lib/validation";
+import { getClientIp } from "@/lib/validation";
+import { getVectorStoreAdapter } from "@/lib/vector-store";
 
 /**
  * HEALTH CHECK API
- * Verifies connectivity to ChromaDB.
+ * Verifies connectivity to the active vector store (ChromaDB, Qdrant, or Pinecone).
  */
 
 export async function GET(req: Request) {
-  const ip = req.headers.get("x-forwarded-for") || "anonymous";
+  const ip = getClientIp(req);
   if (!await rateLimit(ip, undefined, 60, 60000)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const url = process.env.CHROMA_URL || "http://localhost:8000";
-  if (process.env.NODE_ENV === "production" && !validateSafeUrl(url)) {
-    return NextResponse.json({ status: "offline", error: "Invalid database configuration" }, { status: 500 });
-  }
+  const { searchParams } = new URL(req.url);
+  const vectorStoreProvider = (searchParams.get("vectorStoreProvider") || "chroma") as "chroma" | "qdrant" | "pinecone";
+  const vectorStoreUrl = searchParams.get("vectorStoreUrl") || undefined;
+  const vectorStoreApiKey = req.headers.get("x-vector-store-key") || undefined;
+  const vectorStoreIndex = searchParams.get("vectorStoreIndex") || undefined;
+
   try {
-    const parsed = new URL(url);
-    const client = new ChromaClient({
-      host: parsed.hostname,
-      port: parseInt(parsed.port) || (parsed.protocol === "https:" ? 443 : 80),
-      ssl: parsed.protocol === "https:",
+    const adapter = getVectorStoreAdapter({
+      vectorStoreProvider,
+      vectorStoreUrl,
+      vectorStoreApiKey,
+      vectorStoreIndex,
     });
-    
-    // Simple heartbeat check
-    await client.heartbeat();
-    
-    return NextResponse.json({ status: "online" });
-  } catch (error: any) {
-    console.warn("[Health] Database heartbeat failed");
-    return NextResponse.json({ status: "offline", error: "Database connection failure" }, { status: 503 });
+    const ok = await adapter.healthCheck();
+    if (!ok) {
+      return NextResponse.json({ status: "offline", provider: vectorStoreProvider }, { status: 503 });
+    }
+    return NextResponse.json({ status: "online", provider: vectorStoreProvider });
+  } catch {
+    console.warn(`[Health] ${vectorStoreProvider} heartbeat failed`);
+    return NextResponse.json({ status: "offline", provider: vectorStoreProvider, error: "Database connection failure" }, { status: 503 });
   }
 }

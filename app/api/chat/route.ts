@@ -1,12 +1,20 @@
 import { streamText, createUIMessageStream, createUIMessageStreamResponse } from "ai";
-import { getVectorStore } from "@/lib/embeddings";
 import { getModelProvider } from "@/lib/models";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
 import { ConfigSchema, AppConfig } from "@/lib/config";
 import { Document } from "@langchain/core/documents";
 import { wrapWithProviderCache } from "@/lib/cache";
-import { sanitizeLog } from "@/lib/validation";
+import { sanitizeLog, isSafeFilename, getClientIp } from "@/lib/validation";
+import { getVectorStoreAdapter } from "@/lib/vector-store";
+import { computeGroundedness, recordAuditEvent, redactPii } from "@/lib/security";
+import { resolveAuthContext } from "@/lib/auth";
+import {
+  dedupeDocs,
+  sortDocsDeterministically,
+  formatNumberedContext,
+  executeRetrievalPipeline,
+} from "@/lib/rag-pipeline";
 
 const MessagePartSchema = z.object({
   type: z.string(),
@@ -39,31 +47,15 @@ function extractContent(message: z.infer<typeof MessageSchema>): string {
   return "";
 }
 
-function formatContext(docs: Document[], format: "json" | "toon"): string {
-  if (format === "json") {
-    return JSON.stringify(docs.map(d => ({
-      source: d.metadata.filename,
-      page: d.metadata.page,
-      content: d.pageContent.replace(/<\|.*?\|>/g, "").trim()
-    })), null, 2);
-  }
-
-  // TOON Formatting (2026 Schema-First Tabular)
-  const header = "sources{filename, page, content}:";
-  const rows = docs.map(d => {
-    const filename = d.metadata.filename;
-    const page = d.metadata.page || "N/A";
-    const content = d.pageContent.replace(/<\|.*?\|>/g, "").replace(/\n/g, " ").trim();
-    return `  ${filename}, ${page}, ${content}`;
-  }).join("\n");
-
-  return `${header}\n${rows}`;
-}
-
 export async function POST(req: Request) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "anonymous";
-    const body = await req.json();
+    const ip = getClientIp(req);
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid request JSON" }), { status: 400 });
+    }
     const validationResult = ChatSchema.safeParse(body);
     if (!validationResult.success) {
       console.error("[Chat] Validation Error:", validationResult.error.format());
@@ -77,15 +69,19 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 });
     }
 
-    if (!config.apiKey) {
+    if (config.provider === "custom") {
+      if (!config.baseUrl) {
+        return new Response(JSON.stringify({ error: "Base URL is required for custom provider" }), { status: 400 });
+      }
+    } else if (!config.apiKey) {
       return new Response(JSON.stringify({ error: "API Key is required" }), { status: 401 });
     }
 
     // Key Resolution based on Sources
-    const apiKey = config.apiKey as string;
-    const embeddingKey = config.embeddingKeySource === "custom" ? (config.embeddingApiKey as string) : apiKey;
+    const apiKey = (config.apiKey || "") as string;
+    const embeddingKey = config.embeddingKeySource === "custom" ? (config.embeddingApiKey || apiKey) : apiKey;
     let rerankKey = apiKey; 
-    if (config.rerankKeySource === "custom") rerankKey = config.rerankApiKey as string;
+    if (config.rerankKeySource === "custom") rerankKey = config.rerankApiKey || "";
     else if (config.rerankKeySource === "embedding") rerankKey = embeddingKey;
 
     const embeddingConfig = { ...config, apiKey: embeddingKey };
@@ -112,9 +108,8 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: "No active documents selected for context." }), { status: 400 });
     }
 
-    const safeFilenamePattern = /^[a-zA-Z0-9_\-\.]+$/;
     for (const filename of activeFilenames) {
-      if (!safeFilenamePattern.test(filename)) {
+      if (!isSafeFilename(filename)) {
         return new Response(JSON.stringify({ error: "Invalid active document name format" }), { status: 400 });
       }
     }
@@ -129,88 +124,128 @@ export async function POST(req: Request) {
         execute: async ({ writer }) => {
           try {
             const lastMessage = messages[messages.length - 1];
-            console.log(`[Chat] Vector Store query starting...`);
-            const vectorStore = await getVectorStore({ 
-              ...embeddingConfig, 
-              embeddingBaseUrl: embeddingBaseUrl 
+            const auth = resolveAuthContext(req, config.tenantId, config.userRoles);
+            if (!auth) {
+              writer.write({ type: 'error', errorText: "Unauthorized: invalid or missing JWT" });
+              return;
+            }
+            const tenantId = auth.tenantId;
+            const userRoles = auth.roles;
+            const rawQuery = config.enablePiiRedaction ? redactPii(lastMessage.content).text : lastMessage.content;
+            if (config.enablePiiRedaction) {
+              messages = messages.map((m, idx) =>
+                idx === messages.length - 1 ? { ...m, content: rawQuery } : m
+              );
+            }
+
+            console.log(`[Chat] Vector Store (${config.vectorStoreProvider || "chroma"}) query starting for tenant=${tenantId} (${auth.authMode})...`);
+            const adapter = getVectorStoreAdapter({
+              ...embeddingConfig,
+              embeddingBaseUrl,
             } as AppConfig);
-            
+
             let contextDocs: Document[] = [];
-            
-            let systemPrompt = "You are a precision-focused RAG assistant. STRICT INSTRUCTION: Answer ONLY using the provided Context.";
-            
+            let pipelineTelemetry: Record<string, any> = {
+              mode: "DENSE",
+              rewrittenQuery: rawQuery,
+              wasRewritten: false,
+              denseHits: 0,
+              bm25Hits: 0,
+              reranked: false,
+              hops: 1,
+              finalCount: 0,
+              tenantId,
+              vectorStore: adapter.provider,
+              authMode: auth.authMode,
+            };
+
+            const groundingPrompt = (ctx: string) =>
+              `ROLE: You are a precision-focused RAG assistant.\n` +
+              `STRICT GROUNDING RULES:\n` +
+              `1. Answer ONLY using the numbered Context passages [1]..[N] below.\n` +
+              `2. Cite supporting sources inline using bracketed numbers like [1] or [1][2] right after each claim.\n` +
+              `3. If the answer cannot be verified from the Context, state explicitly: "I cannot find that information in the selected documents."\n\n` +
+              `CONTEXT:\n${ctx}`;
+
+            let systemPrompt = groundingPrompt("");
+
             if (config.useCag) {
               console.log(`[Chat] Using CAG mode with deterministic retrieval...`);
-              
-              // Direct fetch by metadata to ensure query-independence (stable cache hash)
-              const collection = await (vectorStore as any).ensureCollection();
-              const response = await collection.get({
-                where: { filename: { $in: sortedActiveFiles } },
-                limit: 1000
-              });
+              contextDocs = await adapter.getAllByFilenames(sortedActiveFiles, tenantId, userRoles, 1000);
+              contextDocs = sortDocsDeterministically(dedupeDocs(contextDocs));
 
-              // Convert Chroma results back to LangChain Documents
-              contextDocs = (response.ids || []).map((id: string, i: number) => ({
-                pageContent: response.documents[i] || "",
-                metadata: response.metadatas[i] || {}
-              } as Document));
-
-              contextDocs.sort((a, b) => {
-                if (a.metadata.filename !== b.metadata.filename) return a.metadata.filename.localeCompare(b.metadata.filename);
-                return (a.metadata.page || 0) - (b.metadata.page || 0);
-              });
-
-              const contextText = formatContext(contextDocs, config.contextFormat || "toon");
-              systemPrompt = `You are a helpful assistant. Use the following context to answer the user's question.
-
-            CONTEXT:
-            ${contextText}`;
+              const contextText = formatNumberedContext(contextDocs, config.contextFormat || "toon");
+              systemPrompt = groundingPrompt(contextText);
 
               // Unified Caching Logic (Returns updated system instructions and messages)
               const cacheResult = await wrapWithProviderCache(messages, systemPrompt, config);
               systemPrompt = cacheResult.systemPrompt;
               messages = cacheResult.messages;
+
+              pipelineTelemetry = {
+                mode: "CAG",
+                rewrittenQuery: rawQuery,
+                wasRewritten: false,
+                denseHits: contextDocs.length,
+                bm25Hits: 0,
+                reranked: false,
+                hops: 1,
+                finalCount: contextDocs.length,
+                tenantId,
+                vectorStore: adapter.provider,
+                authMode: auth.authMode,
+              };
             } else {
-              console.log(`[Chat] Using RAG mode with threshold: ${config.similarityThreshold}...`);
-              const k = config.useReranking ? 20 : 4;
-              
-              const distanceThreshold = (1 - (config.similarityThreshold || 0.3)) * 2;
-              const searchResults = await vectorStore.similaritySearchWithScore(
-                lastMessage.content,
-                k,
-                { filename: { $in: sortedActiveFiles } }
-              );
-
-              contextDocs = searchResults
-                .filter(([doc, score]) => score <= distanceThreshold)
-                .map(([doc]) => doc);
-
-              // Sort retrieved chunks to ensure deterministic prompt prefixing
-              contextDocs.sort((a, b) => {
-                if (a.metadata.filename !== b.metadata.filename) return a.metadata.filename.localeCompare(b.metadata.filename);
-                return (a.metadata.page || 0) - (b.metadata.page || 0);
+              const retrieval = await executeRetrievalPipeline({
+                messages,
+                rawQuery,
+                adapter,
+                filenames: sortedActiveFiles,
+                tenantId,
+                userRoles,
+                config,
+                rerankKey,
+                rerankBaseUrl,
               });
 
-              if (config.useReranking && contextDocs.length > 1) {
-                // ... (Reranking logic remains same)
-              }
+              contextDocs = retrieval.docs;
+              const context = formatNumberedContext(contextDocs, config.contextFormat || "toon");
+              systemPrompt = groundingPrompt(context);
 
-              const context = formatContext(contextDocs, config.contextFormat || "toon");
-
-              systemPrompt = `ROLE: You are a precision-focused RAG assistant.
-                STRICT INSTRUCTION: Answer ONLY using the provided Context.
-                Context:
-                ${context}`;
+              pipelineTelemetry = {
+                mode: retrieval.mode,
+                rewrittenQuery: retrieval.rewrittenQuery,
+                wasRewritten: retrieval.wasRewritten,
+                denseHits: retrieval.denseHits,
+                bm25Hits: retrieval.bm25Hits,
+                graphHits: retrieval.graphHits,
+                reranked: retrieval.reranked,
+                hops: retrieval.hops,
+                subQueries: retrieval.subQueries,
+                trace: retrieval.trace,
+                finalCount: contextDocs.length,
+                tenantId,
+                vectorStore: adapter.provider,
+                authMode: auth.authMode,
+              };
             }
 
-            console.log(`[Chat] Retrieved ${contextDocs.length} source segments.`);
+            console.log(`[Chat] Retrieved ${contextDocs.length} source segments (${pipelineTelemetry.mode}).`);
 
-            const sources = contextDocs.map(doc => ({
+            const fullSources = contextDocs.map((doc, idx) => ({
+              id: idx + 1,
               filename: doc.metadata.filename,
               page: doc.metadata.page || "N/A",
-              content: doc.pageContent.substring(0, 160) + "..."
+              section: doc.metadata.section || undefined,
+              content: doc.pageContent,
             }));
 
+            const sources = fullSources.map(s => ({
+              ...s,
+              content: s.content.length > 160 ? s.content.substring(0, 160) + "..." : s.content,
+            }));
+
+            writer.write({ type: 'data-custom', data: { type: 'pipeline', pipeline: pipelineTelemetry } });
             writer.write({ type: 'data-custom', data: { type: 'sources', sources } });
 
             console.log(`[Chat] Initializing LLM provider: ${config.provider}`);
@@ -220,9 +255,30 @@ export async function POST(req: Request) {
               model,
               system: systemPrompt,
               messages,
+              onFinish: ({ text }) => {
+                const groundedness = computeGroundedness(text, fullSources);
+                writer.write({ type: 'data-custom', data: { type: 'groundedness', groundedness } });
+                if (config.enableAuditLog !== false) {
+                  recordAuditEvent({
+                    action: "query",
+                    tenantId,
+                    roles: userRoles,
+                    actorIp: ip,
+                    provider: config.provider,
+                    vectorStore: adapter.provider,
+                    details: {
+                      mode: pipelineTelemetry.mode,
+                      chunks: contextDocs.length,
+                      groundedness: groundedness.score,
+                    },
+                    status: "success",
+                  });
+                }
+              },
             });
 
             writer.merge(result.toUIMessageStream() as any);
+            await result.text;
           } catch (innerError: any) {
             const cleanMessage = sanitizeLog(innerError.message || "Internal generation error");
             console.error("[Chat] Stream execution error:", cleanMessage);

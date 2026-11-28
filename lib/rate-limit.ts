@@ -13,6 +13,7 @@ interface IRedisClient {
   set(key: string, value: any, options?: { px: number }): Promise<any>;
   incr(key: string): Promise<number>;
   pexpire(key: string, ms: number): Promise<any>;
+  close(): Promise<void> | void;
 }
 
 class UpstashDriver implements IRedisClient {
@@ -22,11 +23,22 @@ class UpstashDriver implements IRedisClient {
   async set(key: string, value: any, options?: { px: number }) { return await this.client.set(key, value, options); }
   async incr(key: string) { return await this.client.incr(key); }
   async pexpire(key: string, ms: number) { return await this.client.pexpire(key, ms); }
+  close() {}
 }
 
 class StandardDriver implements IRedisClient {
   private client: Redis;
-  constructor(options: string | RedisOptions) { this.client = new Redis(options as any); }
+  constructor(options: string | RedisOptions) {
+    const baseOpts: RedisOptions = {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
+      retryStrategy: () => null,
+    };
+    this.client = typeof options === "string"
+      ? new Redis(options, baseOpts)
+      : new Redis({ ...options, ...baseOpts });
+    this.client.on("error", () => {});
+  }
   async get<T>(key: string) {
     const val = await this.client.get(key);
     return val ? JSON.parse(val) as T : null;
@@ -38,6 +50,7 @@ class StandardDriver implements IRedisClient {
   }
   async incr(key: string) { return await this.client.incr(key); }
   async pexpire(key: string, ms: number) { return await this.client.pexpire(key, ms); }
+  close() { this.client.disconnect(); }
 }
 
 function getRedisClient(config?: AppConfig): IRedisClient | null {
@@ -109,10 +122,19 @@ export async function rateLimit(ip: string, config?: AppConfig, limit: number = 
       return current <= limit;
     } catch (error: any) {
       console.error("[RateLimit] Redis error, fallback to memory:", sanitizeLog(error.message || "Unknown error"));
+    } finally {
+      await redis.close();
     }
   }
 
   const now = Date.now();
+  if (localRateLimitMap.size > 1000) {
+    for (const [k, entry] of localRateLimitMap.entries()) {
+      if (now - entry.lastReset > windowMs) {
+        localRateLimitMap.delete(k);
+      }
+    }
+  }
   const userData = localRateLimitMap.get(ip) || { count: 0, lastReset: now };
   if (now - userData.lastReset > windowMs) {
     userData.count = 0;

@@ -2,6 +2,7 @@
 import path from "path";
 
 const nextConfig = {
+  ...(process.env.DOCKER_BUILD === "1" ? { output: "standalone" } : {}),
   outputFileTracingRoot: path.join(process.cwd(), "./"),
   typescript: {
     ignoreBuildErrors: true,
@@ -9,7 +10,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  serverExternalPackages: ["chromadb", "pdf-parse"],
+  serverExternalPackages: ["chromadb", "pdf-parse", "pg", "mysql2"],
   async headers() {
     return [
       {

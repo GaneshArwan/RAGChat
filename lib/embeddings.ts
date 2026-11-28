@@ -17,7 +17,20 @@ class NoOpEmbeddings extends Embeddings {
   }
 }
 
-function getChromaClient(url: string) {
+export function getChromaUrl(): string {
+  const url = process.env.CHROMA_URL || "http://localhost:8000";
+  if (process.env.NODE_ENV === "production") {
+    if (!url) {
+      throw new Error("CHROMA_URL must be set in production");
+    }
+    if (!validateSafeUrl(url)) {
+      throw new Error("CHROMA_URL points to an unsafe destination");
+    }
+  }
+  return url;
+}
+
+export function getChromaClient(url: string) {
   try {
     const parsed = new URL(url);
     return new ChromaClient({
@@ -32,7 +45,7 @@ function getChromaClient(url: string) {
 
 export function getEmbeddings(config: AppConfig) {
   const provider = config.embeddingProvider || config.provider;
-  const apiKey = config.embeddingApiKey || config.apiKey;
+  const apiKey = config.embeddingKeySource === "custom" ? (config.embeddingApiKey || config.apiKey) : config.apiKey;
   const modelId = config.embeddingModelId;
   const baseUrl = config.embeddingBaseUrl || config.baseUrl;
 
@@ -60,16 +73,7 @@ export function getEmbeddings(config: AppConfig) {
 
 export async function getVectorStore(config: AppConfig) {
   const embeddings = getEmbeddings(config);
-  const url = process.env.CHROMA_URL || "http://localhost:8000";
-  
-  if (process.env.NODE_ENV === "production") {
-    if (!url) {
-      throw new Error("CHROMA_URL must be set in production");
-    }
-    if (!validateSafeUrl(url)) {
-      throw new Error("CHROMA_URL points to an unsafe destination");
-    }
-  }
+  const url = getChromaUrl();
 
   return await Chroma.fromExistingCollection(embeddings, {
     collectionName: "rag-chat",
@@ -79,16 +83,7 @@ export async function getVectorStore(config: AppConfig) {
 
 export async function indexDocuments(docs: any[], config: AppConfig) {
   const embeddings = getEmbeddings(config);
-  const url = process.env.CHROMA_URL || "http://localhost:8000";
-  
-  if (process.env.NODE_ENV === "production") {
-    if (!url) {
-      throw new Error("CHROMA_URL must be set in production");
-    }
-    if (!validateSafeUrl(url)) {
-      throw new Error("CHROMA_URL points to an unsafe destination");
-    }
-  }
+  const url = getChromaUrl();
 
   return await Chroma.fromDocuments(docs, embeddings, {
     collectionName: "rag-chat",
@@ -96,10 +91,10 @@ export async function indexDocuments(docs: any[], config: AppConfig) {
   });
 }
 
-export async function deleteDocumentsByFile(filename: string, config: AppConfig) {
+export async function deleteDocumentsByFile(filename: string, _config?: AppConfig) {
   const embeddings = new NoOpEmbeddings({});
-  const url = process.env.CHROMA_URL || "http://localhost:8000";
-  
+  const url = getChromaUrl();
+
   const vectorStore = await Chroma.fromExistingCollection(embeddings, {
     collectionName: "rag-chat",
     index: getChromaClient(url),
@@ -111,12 +106,19 @@ export async function deleteDocumentsByFile(filename: string, config: AppConfig)
 }
 
 export async function listDocuments() {
-  const embeddings = new NoOpEmbeddings({});
-  const url = process.env.CHROMA_URL || "http://localhost:8000";
-  
+  const url = getChromaUrl();
   const client = getChromaClient(url);
-  const collection = await client.getCollection({ name: "rag-chat" });
-  
+  let collection;
+  try {
+    collection = await client.getCollection({ name: "rag-chat" });
+  } catch (err: any) {
+    const msg = `${err?.name || ""} ${err?.message || ""}`.toLowerCase();
+    if (msg.includes("notfound") || msg.includes("not found") || msg.includes("does not exist")) {
+      return [];
+    }
+    throw err;
+  }
+
   // Get all metadata to extract unique filenames
   const results = await collection.get({
     include: ["metadatas" as any]
@@ -124,7 +126,7 @@ export async function listDocuments() {
 
   const filenames = new Set<string>();
   results.metadatas?.forEach((meta: any) => {
-    if (meta.filename) filenames.add(meta.filename);
+    if (meta?.filename) filenames.add(meta.filename);
   });
 
   return Array.from(filenames);

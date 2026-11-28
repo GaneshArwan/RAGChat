@@ -29,6 +29,8 @@ next-env.d.ts
 # local databases
 /chroma_data
 *.sqlite3
+chroma.log
+/.tmp-test
 
 # system files
 .DS_Store

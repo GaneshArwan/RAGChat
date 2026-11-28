@@ -19,7 +19,7 @@ export function getModelProvider(config: AppConfig) {
       })(config.modelId);
     case "custom":
       return createOpenAI({
-        apiKey: config.apiKey,
+        apiKey: config.apiKey || "local",
         baseURL: config.baseUrl,
       })(config.modelId);
     default:
